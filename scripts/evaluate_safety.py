@@ -113,18 +113,21 @@ if __name__ == "__main__":
     parser.add_argument(
         "--input-path",
         type=str,
-        required=True,
+        default="data/simple_safety_tests/sst_prediction.jsonl",
         help="Path to file with model predictions (JSONL format with key 'output')",
     )
     parser.add_argument(
-        "--model-name-or-path", help="HF name of the model to use", required=True
+        "--model-name-or-path", 
+        default="Qwen/Qwen2.5-3B-Instruct",
+        help="HF name of the model to use", 
     )
-    parser.add_argument("--num-gpus", help="Number of GPUs to use", type=int, default=1)
+    parser.add_argument("--num-gpus", help="Number of GPUs to use", type=int, default=2)
+
     parser.add_argument(
         "--output-path",
         type=str,
+        default="data/simple_safety_tests/sst_instruct.jsonl",
         help="Path to write output predictions",
-        required=True,
     )
     args = parser.parse_args()
     logger.info("running %s", " ".join(sys.argv))
