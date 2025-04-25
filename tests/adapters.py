@@ -5,11 +5,11 @@ import os
 from typing import Any
 
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 from transformers import PreTrainedTokenizerBase
-
+from cs336_alignment.instruction_fine_tuning.dataset import IFT
 from cs336_alignment.metrics import parse_mmlu_response, parse_gsm8k_response
-
+from cs336_alignment.dpo import dpo_loss
 def get_packed_sft_dataset(
     tokenizer: PreTrainedTokenizerBase,
     dataset_path: str | os.PathLike,
@@ -37,7 +37,8 @@ def get_packed_sft_dataset(
         "input_ids" contains the token IDs for the language modeling inputs, and "labels" contains
         the token IDs for the language modeling labels.
     """
-    raise NotImplementedError
+    ift = IFT(tokenizer, dataset_path, seq_length, shuffle)
+    return ift
 
 
 def run_iterate_batches(
@@ -60,7 +61,7 @@ def run_iterate_batches(
     Returns:
         Iterable over batches, where each batch has size `batch_size`.
     """
-    raise NotImplementedError
+    return DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
 
 
 def run_parse_mmlu_response(
@@ -141,4 +142,12 @@ def compute_per_instance_dpo_loss(
     Returns:
         torch.Tensor with the DPO loss for this example.
     """
-    raise NotImplementedError
+    return dpo_loss(
+        lm,
+        lm_ref,
+        tokenizer,
+        beta,
+        prompt,
+        response_chosen,
+        response_rejected,
+    )

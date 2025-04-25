@@ -8,20 +8,6 @@ from transformers import AutoTokenizer
 from dataclasses import dataclass, asdict
 
 @dataclass
-class GSM8KDS:
-    question: str
-    label: str
-    prediction: Optional[str] = None
-    output: Optional[str] = None
-
-    @property
-    def prompt(self) -> str:
-        return (
-            f"{self.question}\n"
-            f"Answer: "
-        )
-    
-@dataclass
 class SSTDS:
     prompts_final: str
     output: Optional[str] = None
@@ -45,7 +31,20 @@ class SST:
             for question in self.questions:
                 json_line = json.dumps(asdict(question), default=str)
                 f.write(json_line + '\n')
+@dataclass
+class GSM8KDS:
+    question: str
+    label: str
+    prediction: Optional[str] = None
+    output: Optional[str] = None
 
+    @property
+    def prompt(self) -> str:
+        return (
+            f"{self.question}\n"
+            f"Answer: "
+        )
+    
 class GSM8K:     
     def parse_gsm8k_response(
         self,
