@@ -58,7 +58,24 @@ def dpo_dataset():
             json_line = json.dumps(result)
             f.write(json_line + '\n')
 
+prompt_format = """Below is an instruction that describes a task. Write a response that appropriately completes the request.
 
+### Instruction:
+{prompt}
+
+### Response:
+{response}"""
+
+def get_logprob(
+    model, 
+    prompt, 
+    response, 
+    tokenizer):
+    input = torch.tensor(tokenizer.encode(prompt_format.format(prompt=prompt, response=response)) + [tokenizer.eos_token_id]).unsqueeze(0).to(model.device)
+    labels = input.clone()[:, 1:]
+    logits = model(input).logits[:, :-1, :]
+    logits = F.log_softmax(logits, dim=-1)
+    return torch.gather(logits, 2, labels.unsqueeze(-1)).squeeze(-1).sum(-1)
 
 def dpo_loss(
     lm: torch.nn.Module,
@@ -70,31 +87,9 @@ def dpo_loss(
     response_rejected: str,
 ) -> torch.Tensor:
 
-    prompt_format = """Below is an instruction that describes a task. Write a response that appropriately completes the request.
-
-    ### Instruction:
-    {prompt}
-
-    ### Response:
-    {response}"""
-
-    def get_logprob(
-        model, 
-        prompt, 
-        response, 
-        tokenizer):
-        input = torch.tensor(tokenizer.encode(prompt_format.format(prompt=prompt, response=response)) + [tokenizer.eos_token_id]).unsqueeze(0).to(model.device)
-        labels = input.clone()[:, 1:]
-        logits = model(input).logits[:, :-1, :]
-        logits = F.log_softmax(logits, dim=-1)
-        return torch.gather(logits, 2, labels.unsqueeze(-1)).squeeze(-1).sum(-1)
-    
     with torch.no_grad():
         pi_ref_chosen = get_logprob(lm_ref, prompt, response_chosen, tokenizer)
         pi_ref_rejected = get_logprob(lm_ref, prompt, response_rejected, tokenizer)
     pi_chosen = get_logprob(lm, prompt, response_chosen, tokenizer)
     pi_rejected = get_logprob(lm, prompt, response_rejected, tokenizer)
     return -F.logsigmoid(beta * (pi_chosen - pi_rejected + pi_ref_rejected.to(lm.device) - pi_ref_chosen.to(lm.device)))
-
-if __name__ == "__main__":
-    dpo_dataset()

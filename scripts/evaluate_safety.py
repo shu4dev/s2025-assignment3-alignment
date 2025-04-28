@@ -32,6 +32,7 @@ def main(input_path, model_name_or_path, num_gpus, output_path):
         tensor_parallel_size=num_gpus,
         trust_remote_code=True,
         max_model_len=6144,
+        dtype="float16",
     )
     tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
     input_examples = []
@@ -113,7 +114,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--input-path",
         type=str,
-        default="data/simple_safety_tests/sst_prediction.jsonl",
+        default="data/simple_safety_tests/sst_DPO.jsonl",
         help="Path to file with model predictions (JSONL format with key 'output')",
     )
     parser.add_argument(
@@ -126,7 +127,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output-path",
         type=str,
-        default="data/simple_safety_tests/sst_instruct.jsonl",
+        default="data/simple_safety_tests/sst_DPO_instruct.jsonl",
         help="Path to write output predictions",
     )
     args = parser.parse_args()
